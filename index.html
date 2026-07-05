@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🏍️ 全国ツーリング記録帳</title>
+<style>
+:root{
+  --bg:#0F1117;--bg2:#1A1D27;--bg3:#242838;--border:#2E3347;
+  --text:#F0F2F8;--text2:#8B91A8;--text3:#5A6078;
+  --amber:#E8A020;--green:#4CAF72;--blue:#5B9BF0;--red:#E05555;--gray:#5A6078;
+  --radius:10px;--radius-sm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;min-height:100vh;font-size:14px}
+.app-hdr{background:linear-gradient(135deg,#1A1D27,#242838);border-bottom:1px solid var(--border);padding:14px 14px 10px;position:sticky;top:0;z-index:50}
+.app-hdr-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.app-logo{font-size:20px}
+.app-title{font-size:15px;font-weight:600}
+.app-sub{font-size:10px;color:var(--text2);margin-top:1px}
+.hdr-btns{margin-left:auto;display:flex;gap:6px}
+.hdr-btn{display:flex;align-items:center;gap:4px;padding:6px 10px;border:none;border-radius:var(--radius-sm);font-size:11px;font-weight:500;cursor:pointer}
+.btn-export{background:var(--amber);color:#fff}
+.btn-import{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.stats{display:flex;border-bottom:1px solid var(--border)}
+.stat{flex:1;padding:9px 6px;text-align:center;border-right:1px solid var(--border)}
+.stat:last-child{border-right:none}
+.stat-v{font-size:19px;font-weight:700}
+.stat-k{font-size:10px;color:var(--text2);margin-top:2px}
+.toolbar{padding:9px 12px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.f-btn{padding:5px 11px;border-radius:20px;border:1px solid var(--border);font-size:11px;font-weight:500;cursor:pointer;background:var(--bg3);color:var(--text2)}
+.f-btn.on{background:var(--amber);color:#fff;border-color:var(--amber)}
+.pref-sel{margin-left:auto;padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:11px}
+.search-wrap{padding:8px 12px;border-bottom:1px solid var(--border)}
+.search-input{width:100%;padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px}
+.search-input::placeholder{color:var(--text3)}
+.list{padding:0 12px 100px}
+.sec-hd{font-size:10px;font-weight:600;color:var(--text3);padding:13px 0 5px;text-transform:uppercase;letter-spacing:.06em;border-top:1px solid var(--border);margin-top:4px;display:flex;align-items:center;gap:6px}
+.sec-hd:first-child{border-top:none}
+.sec-cnt{background:var(--bg3);color:var(--text2);font-size:10px;padding:1px 6px;border-radius:10px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:11px 13px;margin-bottom:7px;cursor:pointer;transition:border-color .15s}
+.card:hover{border-color:var(--amber)}
+.card.visited{border-left:3px solid var(--green)}
+.card.planned{border-left:3px solid var(--blue)}
+.card.unvisited{border-left:3px solid var(--border)}
+.card-top{display:flex;align-items:flex-start;gap:8px}
+.card-name{font-size:13px;font-weight:500;flex:1;line-height:1.35}
+.card-meta{font-size:10px;color:var(--text3);margin-top:3px}
+.badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0}
+.badge.visited{background:rgba(76,175,114,.2);color:var(--green)}
+.badge.planned{background:rgba(91,155,240,.2);color:var(--blue)}
+.badge.unvisited{background:var(--bg3);color:var(--text3)}
+.card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.tag{font-size:10px;font-weight:500;padding:2px 7px;border-radius:4px}
+.fab{position:fixed;bottom:24px;right:20px;width:52px;height:52px;border-radius:50%;background:var(--amber);color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(232,160,32,.4);display:flex;align-items:center;justify-content:center;z-index:60}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:flex-end;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg2);border-radius:var(--radius) var(--radius) 0 0;padding:18px 16px 36px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto}
+@media(min-width:480px){.modal{border-radius:var(--radius)}.modal-bg{align-items:center}}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.modal-t{font-size:15px;font-weight:600}
+.modal-close{background:none;border:none;color:var(--text2);font-size:24px;cursor:pointer;line-height:1;padding:0 4px}
+.field{margin-bottom:13px}
+.field label{font-size:11px;color:var(--text2);display:block;margin-bottom:5px;font-weight:500}
+.field input,.field select,.field textarea{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg3);color:var(--text);font-size:13px}
+.field textarea{height:68px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--amber)}
+.star-row{display:flex;gap:6px;margin-top:4px}
+.star{font-size:24px;cursor:pointer;opacity:.25;transition:opacity .1s;line-height:1}
+.star.on{opacity:1}
+.modal-btns{display:flex;gap:8px;margin-top:18px}
+.btn-primary{flex:1;padding:12px;background:var(--amber);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer}
+.btn-del{padding:12px 14px;background:rgba(224,85,85,.15);color:var(--red);border:1px solid rgba(224,85,85,.3);border-radius:var(--radius-sm);font-size:13px;cursor:pointer}
+.btn-cancel{padding:12px 14px;background:var(--bg3);color:var(--text2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;cursor:pointer}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#2E3347;color:var(--text);padding:10px 20px;border-radius:20px;font-size:12px;font-weight:500;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.export-hint{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin:10px 0 0;font-size:11px;color:var(--text2);line-height:1.6}
+.export-hint b{color:var(--amber)}
+.empty{text-align:center;padding:48px 16px;color:var(--text2)}
+</style>
+</head>
+<body>
+
+<div class="app-hdr">
+  <div class="app-hdr-top">
+    <span class="app-logo">🏍️</span>
+    <div><div class="app-title">全国ツーリング記録帳</div><div class="app-sub">既訪・未訪・計画中スポットを管理</div></div>
+    <div class="hdr-btns">
+      <button class="hdr-btn btn-import" onclick="triggerImport()" title="JSONを読み込む">📂 読込</button>
+      <button class="hdr-btn btn-export" onclick="exportHTML()" title="HTMLとして保存">💾 保存</button>
+    </div>
+  </div>
+  <div class="stats" id="stats"></div>
+</div>
+
+<div class="toolbar">
+  <button class="f-btn on" onclick="setFilter('all',this)">すべて</button>
+  <button class="f-btn" onclick="setFilter('visited',this)">✅ 訪問済み</button>
+  <button class="f-btn" onclick="setFilter('planned',this)">📅 計画中</button>
+  <button class="f-btn" onclick="setFilter('unvisited',this)">⬜ 未訪問</button>
+  <select class="pref-sel" onchange="setPref(this.value)">
+    <option value="all">🗾 全国</option>
+    <option value="長野県">長野県</option><option value="山梨県">山梨県</option>
+    <option value="静岡県">静岡県</option><option value="神奈川県">神奈川県</option>
+    <option value="群馬県">群馬県</option><option value="福島県">福島県</option>
+    <option value="岐阜県">岐阜県</option><option value="富山県">富山県</option>
+    <option value="高知県">高知県</option><option value="愛媛県">愛媛県</option>
+    <option value="徳島県">徳島県</option><option value="香川県">香川県</option>
+    <option value="その他">その他</option>
+  </select>
+</div>
+
+<div class="search-wrap">
+  <input class="search-input" id="search" placeholder="🔍 スポット名・メモで検索..." oninput="render()">
+</div>
+
+<div class="list" id="list"></div>
+<button class="fab" onclick="openModal()">＋</button>
+<div class="toast" id="toast"></div>
+<input type="file" id="file-input" accept=".json,.html" style="display:none" onchange="importFile(event)">
+
+<!-- 編集モーダル -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-t" id="modal-t">スポットを追加</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="field"><label>スポット名 *</label><input id="f-name" placeholder="例：大王わさび農場"></div>
+    <div class="field"><label>都道府県 *</label>
+      <select id="f-pref">
+        <option>長野県</option><option>山梨県</option><option>静岡県</option>
+        <option>神奈川県</option><option>群馬県</option><option>福島県</option>
+        <option>岐阜県</option><option>富山県</option><option>高知県</option>
+        <option>愛媛県</option><option>徳島県</option><option>香川県</option><option>その他</option>
+      </select>
+    </div>
+    <div class="field"><label>カテゴリ</label>
+      <select id="f-cat">
+        <option>絶景・展望</option><option>道の駅</option><option>温泉・サウナ</option>
+        <option>グルメ</option><option>快走路</option><option>自然・公園</option>
+        <option>観光スポット</option><option>宿泊</option>
+      </select>
+    </div>
+    <div class="field"><label>状態</label>
+      <select id="f-status">
+        <option value="unvisited">⬜ 未訪問</option>
+        <option value="planned">📅 計画中</option>
+        <option value="visited">✅ 訪問済み</option>
+      </select>
+    </div>
+    <div class="field"><label>評価（訪問済みの場合）</label>
+      <div class="star-row" id="stars">
+        <span class="star" onclick="setStar(1)">⭐</span><span class="star" onclick="setStar(2)">⭐</span>
+        <span class="star" onclick="setStar(3)">⭐</span><span class="star" onclick="setStar(4)">⭐</span>
+        <span class="star" onclick="setStar(5)">⭐</span>
+      </div>
+    </div>
+    <div class="field"><label>訪問日</label><input id="f-date" type="date"></div>
+    <div class="field"><label>メモ・感想</label><textarea id="f-memo" placeholder="感想・注意点・おすすめポイントなど"></textarea></div>
+    <div class="export-hint">💡 <b>編集後は「💾 保存」ボタン</b>でHTMLを再生成し、iCloud Driveに上書き保存してください。これがデータを維持する唯一の方法です。</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="btn-del" id="btn-del" style="display:none" onclick="delSpot()">削除</button>
+      <button class="btn-primary" onclick="saveSpot()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== データ（ここに埋め込み） ==========
+var SPOTS_DATA = [
+  {id:1,name:'道の駅 アルプス安曇野ほりがねの里',pref:'長野県',cat:'道の駅',status:'planned',stars:0,date:'2026-07-15',memo:'7:00〜。朝の買い出し。DAY1 07:30'},
+  {id:2,name:'大王わさび農場',pref:'長野県',cat:'自然・公園',status:'planned',stars:0,date:'2026-07-15',memo:'8:00〜・入場無料。チェアリング朝食。わさびソフト450円'},
+  {id:3,name:'道の駅 安曇野松川（寄って停まつかわ）',pref:'長野県',cat:'道の駅',status:'planned',stars:0,date:'2026-07-15',memo:'宮沢牧場ソフト360円。県道306号の起点'},
+  {id:4,name:'県道306号 北アルプスパノラマロード',pref:'長野県',cat:'快走路',status:'planned',stars:0,date:'2026-07-15',memo:'高瀬川沿い堤防・信号ほぼゼロ。北アルプスを正面に仰ぐ絶景快走路'},
+  {id:5,name:'仁科三湖（木崎湖・中綱湖・青木湖）',pref:'長野県',cat:'絶景・展望',status:'planned',stars:0,date:'2026-07-15',memo:'北アルプスを映す水鏡の絶景。チェアリング推奨'},
+  {id:6,name:'道の駅 白馬',pref:'長野県',cat:'道の駅',status:'planned',stars:0,date:'2026-07-15',memo:'石臼手打ちそば・SPF豚ソースカツ重。火曜定休→水曜OK'},
+  {id:7,name:'大出公園 白馬村',pref:'長野県',cat:'絶景・展望',status:'planned',stars:0,date:'2026-07-15',memo:'入場無料。白馬連峰・姫川・水車小屋の絶景。チェアリング最適'},
+  {id:8,name:'道の駅 ぽかぽかランド美麻',pref:'長野県',cat:'温泉・サウナ',status:'planned',stars:0,date:'2026-07-15',memo:'北投石の湯・サウナ・露天風呂7種。直前確認推奨 0261-29-2030'},
+  {id:9,name:'姫川源流自然探勝園',pref:'長野県',cat:'自然・公園',status:'planned',stars:0,date:'2026-07-16',memo:'7月は高山植物の残り花。早朝の静けさが格別。無料'},
+  {id:10,name:'道の駅 小谷（おたり）',pref:'長野県',cat:'道の駅',status:'planned',stars:0,date:'2026-07-16',memo:'10:00〜・水曜定休→木曜OK。きなこプリン・かまど飯定食・深山の湯'},
+  {id:11,name:'青木湖 湖畔',pref:'長野県',cat:'絶景・展望',status:'planned',stars:0,date:'2026-07-16',memo:'仁科三湖の最北。チェアリング・膝ストレッチ推奨'},
+  {id:12,name:'八ヶ岳エコーライン（八ヶ岳西麓広域農道）',pref:'長野県',cat:'快走路',status:'planned',stars:0,date:'2026-07-16',memo:'全長約16km。茅野〜富士見。八ヶ岳・南アルプス・富士山が見える絶景広域農道'},
+  {id:13,name:'清泉寮ジャージーハット',pref:'山梨県',cat:'グルメ',status:'planned',stars:0,date:'2026-07-16',memo:'有機ジャージーソフト500円・プレミアム900円。足湯無料。LO16:00'},
+  {id:14,name:'甘利山広河原駐車場',pref:'山梨県',cat:'絶景・展望',status:'planned',stars:0,date:'2026-07-16',memo:'標高1640m・無料80台。富士山・甲府盆地・八ヶ岳360度パノラマ。韮崎ICから約60分'},
+  {id:15,name:'道の駅 にらさき',pref:'山梨県',cat:'道の駅',status:'planned',stars:0,date:'2026-07-16',memo:'月曜定休→木曜OK。韮崎IC手前。塩川沿いの開放的な休憩スポット'},
+  {id:16,name:'道の駅 南アルプスむら長谷',pref:'長野県',cat:'道の駅',status:'unvisited',stars:0,date:'',memo:'パンや8:00〜・火曜定休。ミニクロワッサン・すずらんソフト'},
+  {id:17,name:'杖突峠',pref:'長野県',cat:'絶景・展望',status:'unvisited',stars:0,date:'',memo:'標高1247m。諏訪湖・八ヶ岳・北アルプス一望'},
+  {id:18,name:'いじわる婆さん',pref:'長野県',cat:'グルメ',status:'unvisited',stars:0,date:'',memo:'蓼科高原。ジビエ定食・クリームコロッケ。木金定休。0266-78-2051'},
+  {id:19,name:'道の駅 ビーナスライン蓼科湖',pref:'長野県',cat:'道の駅',status:'unvisited',stars:0,date:'',memo:'ビーナスライン入口。ソフトクリーム'},
+  {id:20,name:'車山高原 車山肩',pref:'長野県',cat:'絶景・展望',status:'unvisited',stars:0,date:'',memo:'標高1925m。360度パノラマ。6月中旬レンゲツツジ。ころぼっくるひゅって'},
+  {id:21,name:'霧ヶ峰富士見台（霧ヶ峰ビーナス）',pref:'長野県',cat:'絶景・展望',status:'unvisited',stars:0,date:'',memo:'標高1660m・関東富士見百景。霧鐘塔まで徒歩15分'},
+  {id:22,name:'八島ヶ原湿原',pref:'長野県',cat:'自然・公園',status:'unvisited',stars:0,date:'',memo:'木道散策20分。レンゲツツジ・コバイケイソウ'},
+  {id:23,name:'道の駅 美ヶ原高原',pref:'長野県',cat:'道の駅',status:'unvisited',stars:0,date:'',memo:'標高2000m。北アルプスのパノラマテラス。ビーナスライン北端'},
+  {id:24,name:'美ヶ原高原 山本小屋ふる里館',pref:'長野県',cat:'絶景・展望',status:'unvisited',stars:0,date:'',memo:'美しの塔まで徒歩15分。草原と放牧牛と北アルプス'},
+  {id:25,name:'裏ビーナス（県道62号）武石峠',pref:'長野県',cat:'快走路',status:'unvisited',stars:0,date:'',memo:'松本盆地越しの北アルプス。知る人ぞ知る爽快路'},
+  {id:26,name:'湯小路いきいき元気館',pref:'長野県',cat:'温泉・サウナ',status:'unvisited',stars:0,date:'',memo:'諏訪市営。硫黄温泉・115度サウナ・12度水風呂。310円。第3月曜定休'},
+  {id:27,name:'林檎の湯屋おぶ〜 松本',pref:'長野県',cat:'温泉・サウナ',status:'unvisited',stars:0,date:'',memo:'年中無休。オートロウリュ・ありがとうサウナ・ひやたま水風呂。750円'},
+  {id:28,name:'道の駅 南きよさと',pref:'山梨県',cat:'道の駅',status:'unvisited',stars:0,date:'',memo:'8:30〜17:00。無休（1〜2月火休）。清里手前・R141沿い'},
+  {id:29,name:'嬬恋パノラマライン',pref:'群馬県',cat:'快走路',status:'planned',stars:0,date:'2026-08-26',memo:'草津〜嬬恋。浅間山・四阿山を望む高原快走路'},
+  {id:30,name:'草津温泉',pref:'群馬県',cat:'温泉・サウナ',status:'planned',stars:0,date:'2026-08-26',memo:'日本三名泉。湯畑・西の河原。立ち寄り湯多数'},
+  {id:31,name:'志賀草津高原ルート（国道292号・渋峠）',pref:'群馬県',cat:'快走路',status:'planned',stars:0,date:'2026-08-27',memo:'日本一標高が高い国道2172m。雲の上を走る感覚'},
+  {id:32,name:'水沢うどん（水沢エリア）',pref:'群馬県',cat:'グルメ',status:'planned',stars:0,date:'2026-08-26',memo:'日本三大うどん。腰が強くコシが絶品'},
+  {id:33,name:'永井食堂（もつ煮）',pref:'群馬県',cat:'グルメ',status:'planned',stars:0,date:'2026-08-26',memo:'平日のみ。モツ煮込みで有名。要定休確認'},
+  {id:34,name:'仁淀川ブルー（にこ淵）',pref:'高知県',cat:'絶景・展望',status:'planned',stars:0,date:'2026-10-21',memo:'日本一の清流・仁淀川。エメラルドグリーンの滝壺'},
+  {id:35,name:'面河渓（おもごけい）',pref:'愛媛県',cat:'自然・公園',status:'planned',stars:0,date:'2026-10-22',memo:'石鎚山麓の絶景渓谷'},
+  {id:36,name:'下灘駅（しもなだ）',pref:'愛媛県',cat:'絶景・展望',status:'planned',stars:0,date:'2026-10-23',memo:'海に一番近い駅。夕景が絶景。伊予灘ものがたりの撮影地'},
+  {id:37,name:'山下うどん（善通寺市）',pref:'香川県',cat:'グルメ',status:'planned',stars:0,date:'2026-10-20',memo:'月曜営業確認済み。本場讃岐うどん'},
+  {id:38,name:'立石公園（秋谷）',pref:'神奈川県',cat:'絶景・展望',status:'visited',stars:5,date:'2026-01-01',memo:'非常に気に入った！のんびりした風景と海岸沿いの快走路が最高。また来たい'}
+];
+// ========== ここまでデータ ==========
+
+var spots = JSON.parse(JSON.stringify(SPOTS_DATA));
+var filter='all', prefFilter='all', currentStar=0, editId=null;
+
+var catColor={
+  '絶景・展望':'background:rgba(91,155,240,.15);color:#5B9BF0',
+  '道の駅':'background:rgba(232,160,32,.15);color:#E8A020',
+  '温泉・サウナ':'background:rgba(76,175,114,.15);color:#4CAF72',
+  'グルメ':'background:rgba(224,85,85,.15);color:#E05555',
+  '快走路':'background:rgba(120,200,80,.15);color:#78C850',
+  '自然・公園':'background:rgba(80,180,120,.15);color:#50B478',
+  '観光スポット':'background:rgba(160,120,220,.15);color:#A078DC',
+  '宿泊':'background:rgba(139,145,168,.15);color:#8B91A8'
+};
+
+function setFilter(f,btn){filter=f;document.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');render();}
+function setPref(p){prefFilter=p;render();}
+function setStar(n){currentStar=n;document.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('on',i<n));}
+
+function render(){
+  var q=document.getElementById('search').value.toLowerCase();
+  var filtered=spots.filter(function(s){
+    if(filter!=='all'&&s.status!==filter)return false;
+    if(prefFilter!=='all'&&s.pref!==prefFilter)return false;
+    if(q&&!s.name.toLowerCase().includes(q)&&!(s.memo||'').toLowerCase().includes(q))return false;
+    return true;
+  });
+  var v=spots.filter(function(s){return s.status==='visited';}).length;
+  var p=spots.filter(function(s){return s.status==='planned';}).length;
+  var u=spots.filter(function(s){return s.status==='unvisited';}).length;
+  document.getElementById('stats').innerHTML=
+    '<div class="stat"><div class="stat-v">'+spots.length+'</div><div class="stat-k">総スポット</div></div>'+
+    '<div class="stat"><div class="stat-v" style="color:var(--green)">'+v+'</div><div class="stat-k">✅訪問済み</div></div>'+
+    '<div class="stat"><div class="stat-v" style="color:var(--blue)">'+p+'</div><div class="stat-k">📅計画中</div></div>'+
+    '<div class="stat"><div class="stat-v" style="color:var(--gray)">'+u+'</div><div class="stat-k">⬜未訪問</div></div>';
+  if(!filtered.length){document.getElementById('list').innerHTML='<div class="empty">🏍️<br><br>該当するスポットがありません</div>';return;}
+  var groups={visited:[],planned:[],unvisited:[]};
+  filtered.forEach(function(s){groups[s.status].push(s);});
+  var labels={visited:'✅ 訪問済み',planned:'📅 計画中',unvisited:'⬜ 未訪問'};
+  var html='';
+  ['visited','planned','unvisited'].forEach(function(st){
+    if(!groups[st].length)return;
+    html+='<div class="sec-hd">'+labels[st]+'<span class="sec-cnt">'+groups[st].length+'</span></div>';
+    groups[st].forEach(function(s){
+      var stars=s.stars?'⭐'.repeat(s.stars):'';
+      var cc=catColor[s.cat]||'background:var(--bg3);color:var(--text2)';
+      html+='<div class="card '+st+'" onclick="editSpot('+s.id+')">'+
+        '<div class="card-top">'+
+          '<div style="flex:1">'+
+            '<div class="card-name">'+s.name+'</div>'+
+            '<div class="card-meta">'+s.pref+(s.date?' · '+s.date:'')+(stars?' · '+stars:'')+'</div>'+
+          '</div>'+
+          '<span class="badge '+st+'">'+(st==='visited'?'訪問済み':st==='planned'?'計画中':'未訪問')+'</span>'+
+        '</div>'+
+        '<div class="card-tags">'+
+          '<span class="tag" style="'+cc+'">'+s.cat+'</span>'+
+          (s.memo?'<span class="tag" style="background:rgba(255,255,255,.04);color:var(--text2);max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block">'+s.memo+'</span>':'')+
+        '</div>'+
+      '</div>';
+    });
+  });
+  document.getElementById('list').innerHTML=html;
+}
+
+function openModal(s){
+  editId=s?s.id:null;
+  document.getElementById('modal-t').textContent=s?'スポットを編集':'スポットを追加';
+  document.getElementById('f-name').value=s?s.name:'';
+  document.getElementById('f-pref').value=s?s.pref:'長野県';
+  document.getElementById('f-cat').value=s?s.cat:'絶景・展望';
+  document.getElementById('f-status').value=s?s.status:'unvisited';
+  document.getElementById('f-date').value=s?s.date:'';
+  document.getElementById('f-memo').value=s?s.memo:'';
+  document.getElementById('btn-del').style.display=s?'':'none';
+  currentStar=s?s.stars:0;
+  document.querySelectorAll('.star').forEach(function(el,i){el.classList.toggle('on',i<currentStar);});
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');editId=null;}
+function editSpot(id){openModal(spots.find(function(s){return s.id===id;}));}
+
+function saveSpot(){
+  var name=document.getElementById('f-name').value.trim();
+  if(!name){showToast('スポット名を入力してください');return;}
+  var obj={id:editId||Date.now(),name:name,pref:document.getElementById('f-pref').value,cat:document.getElementById('f-cat').value,status:document.getElementById('f-status').value,stars:currentStar,date:document.getElementById('f-date').value,memo:document.getElementById('f-memo').value.trim()};
+  if(editId){spots=spots.map(function(s){return s.id===editId?obj:s;});}
+  else{spots.push(obj);}
+  closeModal();render();
+  showToast(editId?'更新しました ✅ 「💾 保存」で上書き保存してください':'追加しました ✅ 「💾 保存」で上書き保存してください',3500);
+}
+
+function delSpot(){
+  if(!confirm('このスポットを削除しますか？'))return;
+  spots=spots.filter(function(s){return s.id!==editId;});
+  closeModal();render();
+  showToast('削除しました。「💾 保存」で上書き保存してください',3000);
+}
+
+// ===== HTMLエクスポート（データ埋め込み再生成）=====
+function exportHTML(){
+  var jsonStr=JSON.stringify(spots,null,2);
+  var src=document.documentElement.outerHTML;
+  // SPOTS_DATAの中身だけ置換
+  var updated=src.replace(
+    /var SPOTS_DATA = \[[\s\S]*?\];/,
+    'var SPOTS_DATA = '+jsonStr+';'
+  );
+  var blob=new Blob([updated],{type:'text/html;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='touring_record.html';
+  a.click();
+  showToast('HTMLを生成しました。iCloud Driveに上書き保存してください 💾',4000);
+}
+
+// ===== JSONインポート =====
+function triggerImport(){document.getElementById('file-input').click();}
+function importFile(e){
+  var file=e.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var data=JSON.parse(ev.target.result);
+      if(Array.isArray(data)){spots=data;render();showToast('インポートしました（'+data.length+'件）',3000);}
+      else{showToast('データ形式が正しくありません');}
+    }catch(err){showToast('読み込みに失敗しました');}
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+function showToast(msg,ms){
+  ms=ms||2500;
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},ms);
+}
+
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+render();
+</script>
+</body>
+</html>
